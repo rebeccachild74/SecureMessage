@@ -1,1 +1,1 @@
-# SecureMessage
+# SecureMessage project for WSU CPTS 427 Computer Security
