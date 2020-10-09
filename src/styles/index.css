@@ -25,6 +25,7 @@
   outline-color: var(--mid-gray);
   outline-width: 4px;
   outline-style: solid;
+  z-index: 200;
 }
 
 .navbar-title {
@@ -156,7 +157,7 @@ color: white !important;
 }
 
 .new-msg-btn {
-  margin-top: 200px !important;
+  margin-top: 550px !important;
   background-color: var(--lighter-gray) !important;
 }
 
@@ -199,16 +200,34 @@ color: gray;
 padding: 112px 8px 8px 190px;
 }
 
+.message-modal {
+  background-color: var(--mid-gray);
+  width: 70%;
+  height: 400px;
+  border-radius: 12px;
+  z-index: 190;
+  position: absolute;
+  top: 350px;
+}
+
 /* Styling for the message threads */
 .message-thread {
   background-color: var(--mid-gray);
   width: 95%;
-  height: 580px;
+  height: 950px;
   margin-left: 35px;
   border-radius: 12px;
 }
 
-
+.background-blur {
+  background: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 150;
+}
 
 .hide {
 display:none;
@@ -247,9 +266,12 @@ color: white !important;
 color: white !important;
 }
 
+
+/* Consider changing */
 body {
 margin: 0;
 font-family: Roboto;
+overflow: hidden;
 }
 
 /* This class disables a button */

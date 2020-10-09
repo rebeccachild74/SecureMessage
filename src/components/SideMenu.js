@@ -8,23 +8,21 @@ class SideMenu extends React.Component {
 //determine mode.
 renderRecipients = () => {
   let recips = [];
-  console.log(this.props.recipients);
   for (const r in this.props.recipients) {
     recips.push(
-      <div key={r} clssName="recipient-btn">
+      <div key={r} className="recipient-btn">
         <a className="sidemenu-item recipient-button">
           &nbsp;{this.props.recipients[r]}
           </a>
       </div>
     );
   }
-  console.log(recips);
   return recips;
 }
 
     render() {
        return (
-        <div className={"sidemenu " + (this.props.menuOpen ? "sidemenu-open" : "sidemenu-closed")}>
+        <div className={"sidemenu " + (this.props.mode !== AppMode.LOGIN ? "sidemenu-open" : "sidemenu-closed")}>
           {/* SIDE MENU TITLE */}
           <div className="sidemenu-title">
               <span id="userID" className="sidemenu-userID">&nbsp;Inbox</span>
@@ -33,7 +31,7 @@ renderRecipients = () => {
           <div className="sidemenu-items">
             {this.renderRecipients()}
           </div>
-          <a className="new-msg-btn">
+          <a className="new-msg-btn" onClick={this.props.toggleModal}>
           &nbsp;New Message
           </a>
         </div>

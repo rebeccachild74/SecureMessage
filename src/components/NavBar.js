@@ -7,7 +7,7 @@ class NavBar extends React.Component {
       if (this.props.mode === AppMode.ROUNDS_LOGROUND || 
           this.props.mode === AppMode.ROUNDS_EDITROUND)
           return "fa fa-arrow-left";
-      if (this.props.menuOpen)
+      if (this.props.modalOpen)
         return "fa fa-times";
       return "fa fa-bars";
   }
@@ -16,7 +16,7 @@ class NavBar extends React.Component {
     if (this.props.mode === AppMode.ROUNDS_LOGROUND ||
         this.props.mode === AppMode.ROUNDS_EDITROUND) {
       this.props.changeMode(AppMode.ROUNDS);
-    } else if (this.props.mode != AppMode.LOGIN) {
+    } else if (this.props.mode !== AppMode.LOGIN) {
       alert("open menu");
     }
   }

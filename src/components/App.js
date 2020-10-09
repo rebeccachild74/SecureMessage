@@ -1,12 +1,10 @@
 import React from 'react';
 import NavBar from './NavBar.js';
 import SideMenu from './SideMenu.js';
-import FloatingButton from './FloatingButton.js';
 import LoginPage from './LoginPage.js';
 import AppMode from "./../AppMode.js"
 import FeedPage from './FeedPage.js';
-import Rounds from './Rounds.js';
-import CoursesPage from './CoursesPage.js';
+import MessageModal from './MessageModal.js'
 
 const modeTitle = {};
 modeTitle[AppMode.LOGIN] = "Welcome to SpeedScore";
@@ -19,10 +17,6 @@ modeTitle[AppMode.COURSES] = "Courses";
 const modeToPage = {};
 modeToPage[AppMode.LOGIN] = LoginPage;
 modeToPage[AppMode.FEED] = FeedPage;
-modeToPage[AppMode.ROUNDS] = Rounds;
-modeToPage[AppMode.ROUNDS_LOGROUND] = Rounds;
-modeToPage[AppMode.ROUNDS_EDITROUND] = Rounds;
-modeToPage[AppMode.COURSES] = CoursesPage;
 
 
 class App extends React.Component {
@@ -30,27 +24,27 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {mode: AppMode.LOGIN,
-                  menuOpen: false,
+                  modalOpen: false,
                   userId: "",
                   recipients: ["Jermey", "Thomas", "Charlene", "Betsy"],
-                  selectedRecipient: "",
+                  selectedRecipient: ""
                  };
+  }
+
+  componentDidMount() {
+    console.log("Mounted " + this.state.modalOpen);
+    this.setState({modalOpen: false});
+    console.log(this.state.modalOpen);
   }
 
   handleChangeMode = (newMode) => {
     this.setState({mode: newMode});
+    console.log(this.state.mode);
+    console.log(this.state.modalOpen);
   }
 
-  openMenu = () => {
-    this.setState({menuOpen : true});
-  }
-  
-  closeMenu = () => {
-    this.setState({menuOpen : false});
-  }
-
-  toggleMenuOpen = () => {
-    this.setState(prevState => ({menuOpen: !prevState.menuOpen}));
+  togglemodalOpen = () => {
+    this.setState(prevState => ({modalOpen: !prevState.modalOpen}));
   }
 
   setUserId = (Id) => {
@@ -65,19 +59,22 @@ class App extends React.Component {
           title={modeTitle[this.state.mode]} 
           mode={this.state.mode}
           changeMode={this.handleChangeMode}
-          menuOpen={this.state.menuOpen}/>
+          modalOpen={this.state.modalOpen}/>
           <SideMenu 
-            menuOpen = {this.state.menuOpen}
+            modalOpen = {this.state.modalOpen}
             mode={this.state.mode}
             userId={this.state.userId}
-            recipients={this.state.recipients}/>
+            recipients={this.state.recipients}
+            toggleModal={this.togglemodalOpen}/>
           <ModePage 
-            menuOpen={this.state.menuOpen}
+            modalOpen={this.state.modalOpen}
             mode={this.state.mode}
             changeMode={this.handleChangeMode}
             userId={this.state.userId}
             setUserId={this.setUserId}
-            toggleMenuOpen={this.toggleMenuOpen}/>
+            toggleModal={this.togglemodalOpen}/>
+          <MessageModal
+            modalOpen={this.state.modalOpen}/>
       </div>
     );  
   }
