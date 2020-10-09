@@ -1,7 +1,6 @@
 import React from 'react';
 import NavBar from './NavBar.js';
 import SideMenu from './SideMenu.js';
-import ModeBar from './ModeBar.js';
 import FloatingButton from './FloatingButton.js';
 import LoginPage from './LoginPage.js';
 import AppMode from "./../AppMode.js"
@@ -70,10 +69,6 @@ class App extends React.Component {
             mode={this.state.mode}
             toggleMenuOpen={this.toggleMenuOpen}
             userId={this.state.userId}/>
-          <ModeBar 
-            mode={this.state.mode} 
-            changeMode={this.handleChangeMode}
-            menuOpen={this.state.menuOpen}/>
           <ModePage 
             menuOpen={this.state.menuOpen}
             mode={this.state.mode}

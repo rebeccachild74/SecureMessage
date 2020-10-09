@@ -8,25 +8,28 @@
   --lighter-gray: #F8F9FA;
   --highlight: #FFFFFF;
   --shadow: #000000;
+  --navbar: #DEE2E6;
 }
 
 /* Styling of the fixed top bar in the app */
 .navbar {
   overflow: hidden; /* Don't allow scrolling */
   display: block; /* Occupies its own horizontal space */
-  background-color: var(--dark-gray);
+  background-color: var(--navbar);
   position: fixed; /* Doesn't move */
   top: 0;
   width: 100%; /* 100% of width of screen */
   align-content: center;
-  border-radius: 0px;
-  padding: 0px;
-  z-index: 100; /* Force it to be on top */
+  height: 80px;
+  outline-color: var(--mid-gray);
+  outline-width: 4px;
+  outline-style: solid;
 }
 
 .navbar-title {
-color: white;
-font-size: 18px;
+color: black;
+font-size: 24px;
+padding-top: 20px;
 }
 
 /* navbarItems defines styling of items within navbar. They should be centered top-to-bottom
@@ -34,8 +37,30 @@ font-size: 18px;
 .navbar-items {
 display: inline-flex; 
 align-items: center; 
-padding-top: 5px; 
-padding-bottom: 5px;
+padding-top: 5px;
+}
+
+.navbar .user-info {
+  background-color: var(--highlight);
+  height: 56px;
+  width: 200px;
+  border-radius: 10px;
+  font-size: 14px;
+  position: absolute;
+  right: 0;
+  margin-right: 30px;
+  padding-top:18px;
+  text-align: center;
+}
+
+.navbar .icon {
+  height: 30px;
+  width: 30px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  padding-left: 0px;
+  margin-right: 180px;
 }
 
 /* sidemenu -- Styling of the side navigation menu */
@@ -172,7 +197,7 @@ color: gray;
 
 /* Styling for the divs in the app. Ensures that the content at top isn't obscured by top bar */
 .padded-page {
-padding: 56px 8px 0px 8px;
+padding: 112px 8px 0px 8px;
 
 }
 
@@ -184,56 +209,6 @@ display:none;
 .clickable-div 
 {
 cursor: pointer;
-}
-
-/* Styling for mode bar at the bottom of the page */
-.modebar {
-background-color: var(--dark-gray);
-overflow: hidden;
-position: fixed;
-bottom: 0;
-width: 100%;
-z-index: 100;
-}
-
-/* Style the links inside the bottom nav bar */
-.modebar a {
-display: block;
-float: left;
-width: 32%;
-color: white;
-text-align: center;
-padding: 2px 2px;
-text-decoration: none;
-font-size: 17px;
-}
-
-/* Add a gray background color to the button when it is selected */
-.modebar a:active {
-background-color: #F0F0F0;
-color: var(--dark-gray);
-}
-
-/* Add a gray background color to button when it is hovered */
-.modebar a:hover {
-  color: #F0F0F0;
-}
-
-/* Hide the link that should open and close the navbar on small screens */
-.modebar .icon {
-display: none;
-} 
-
-/* Style the icons in the bottom bar */
-.modebar-icon {
-display:block; 
-padding-top:3px;
-}
-
-/* Style the text in the bottom bar */
-.modebar-text {
-display:block;
-font-size: small;
 }
 
 /* Style the floating action button, which is fixed in the lower right of the app */
