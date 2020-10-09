@@ -17,7 +17,7 @@ class NavBar extends React.Component {
         this.props.mode === AppMode.ROUNDS_EDITROUND) {
       this.props.changeMode(AppMode.ROUNDS);
     } else if (this.props.mode != AppMode.LOGIN) {
-      this.props.toggleMenuOpen();
+      alert("open menu");
     }
   }
 
@@ -26,10 +26,6 @@ class NavBar extends React.Component {
     return (
     <div className={"navbar" + (this.props.mode === AppMode.LOGIN ? " invisible" : " visible")}>  
     <span className="navbar-items">
-      <button className="sidemenu-btn" onClick={this.handleMenuBtnClick}>
-        <span id="menuBtnIcon" className={"sidemenu-btn-icon " + this.getMenuBtnIcon()}>
-        </span>
-      </button>
       <span className="navbar-title">
         &nbsp;SecureMessage
       </span>

@@ -9,6 +9,7 @@
   --highlight: #FFFFFF;
   --shadow: #000000;
   --navbar: #DEE2E6;
+  --sidemenu: #E9ECEF;
 }
 
 /* Styling of the fixed top bar in the app */
@@ -30,6 +31,7 @@
 color: black;
 font-size: 24px;
 padding-top: 20px;
+padding-left: 60px;
 }
 
 /* navbarItems defines styling of items within navbar. They should be centered top-to-bottom
@@ -69,30 +71,32 @@ padding-top: 5px;
   width: 0px; /* Menu hidden -- will be opened on click */
   position: fixed; /* Menu stays in place regardless of other content */
   z-index: 150; /* Force the menu to be at front */
-  top: 48px; /* Position menu 48 px from top of screen; accomodates top navbar */
+  top: 84px; /* Position menu 48 px from top of screen; accomodates top navbar */
   left: 0; /* Position the menu on the left hand side */
-  background-color: var(--dark-gray); /* Background color is dark blue */
+  background-color: var(--sidemenu); /* Background color is dark blue */
   overflow-x: hidden; /* Don't allow horizontal scroll */
-  transition: 0.5s; /* Animation transition time is 0.5 sec */
   padding-top: 12px; /* Place menu content 12 px from top */
 }
 
 /* applies only to an anchor tag that's a child of a sidenav element. */
 .sidemenu a {
-      padding: 16px 8px 16px 32px;
+      padding: 8px 8px 8px 32px;
       text-decoration: none;
       font-size: 16px;
-      color: white;
       display: block;
       transition: 0.3s;
+      background-color: var(--light-gray);
+      font-size: 14px;
   }
   
+.sidemenu-items {
+  margin-top: 64px;
+}
 
 .sidemenu div {
-      padding: 0px 0px 10px 6px;
+      padding: 0px 0px 8px 0px;
       text-decoration: none;
       font-size: 16px;
-      color: white;
       display: block;
       transition: 0.3s;
       /* border-bottom: 2px solid white; */
@@ -110,45 +114,36 @@ background-color:  var(--dark-gray) !important;
 color: white !important;
 }
 
+.sidemenu-recipients {
+  margin-top: 80px;
+  margin-left: 0px;
+}
 
 /* Cascading style within a style: This definition applies only to sidenavtitle class defined in an 
  element that's a child of sidenav element. */   
-.sidenmenu .sidemenu-title {
+.sidemenu .sidemenu-title {
       position: absolute;
       width:100%;
-      top: 0px;
+      height: 40px;
+      top: 8px;
       left: 0px;
-      padding: 0px 0px 0px 6px;
+      padding: 8px 0px 0px 6px;
       font-size: 18px;
       margin-top: 20px;
       margin-bottom: 20px !important;
-      border-bottom: 2px solid white;
+      border-bottom: 2px solid var(--lighter-gray);
+      background-color: var(--lighter-gray);
  }
 
  .sidemenu .sidemenu-userID {
    font-size: 14px;
  }
 
-/* side menu button styling */
-.sidemenu-btn {
-background-color: transparent;
-border-color: var(--dark-gray);
-text-align: center;
-}
-
-.sidemenu-btn-icon {
-color: white;
-font-size: 30px;
-cursor: pointer;
-text-align: center;
-}
-
-
 .sidemenu-item:hover {
   cursor: default;
   text-decoration: none;
-  color: var(--dark-gray) !important;
-  background-color: #F0F0F0;
+  color: var(--light-gray) !important;
+  background-color: var(--dark-gray);
 }
 
 /* side menu styling when menu item selected */
@@ -160,16 +155,20 @@ text-align: center;
        background-color: #F0F0F0;
 }
 
+.new-msg-btn {
+  margin-top: 200px !important;
+  background-color: var(--lighter-gray) !important;
+}
+
 /* set width to 250px when menu is open */
 .sidemenu-open {
-  width: 250px;
+  width: 180px;
 }
 
 /* set width to 0px when menu is closed */
 .sidemenu-closed {
   width: 0px;
 }
-
 
 /* The SpeedScore dark blue color theme  */       
 .btn-color-theme {
@@ -197,9 +196,19 @@ color: gray;
 
 /* Styling for the divs in the app. Ensures that the content at top isn't obscured by top bar */
 .padded-page {
-padding: 112px 8px 0px 8px;
-
+padding: 112px 8px 8px 190px;
 }
+
+/* Styling for the message threads */
+.message-thread {
+  background-color: var(--mid-gray);
+  width: 95%;
+  height: 580px;
+  margin-left: 35px;
+  border-radius: 12px;
+}
+
+
 
 .hide {
 display:none;

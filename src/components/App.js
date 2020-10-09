@@ -31,7 +31,10 @@ class App extends React.Component {
     super();
     this.state = {mode: AppMode.LOGIN,
                   menuOpen: false,
-                  userId: ""};
+                  userId: "",
+                  recipients: ["Jermey", "Thomas", "Charlene", "Betsy"],
+                  selectedRecipient: "",
+                 };
   }
 
   handleChangeMode = (newMode) => {
@@ -62,19 +65,19 @@ class App extends React.Component {
           title={modeTitle[this.state.mode]} 
           mode={this.state.mode}
           changeMode={this.handleChangeMode}
-          menuOpen={this.state.menuOpen}
-          toggleMenuOpen={this.toggleMenuOpen}/>
+          menuOpen={this.state.menuOpen}/>
           <SideMenu 
             menuOpen = {this.state.menuOpen}
             mode={this.state.mode}
-            toggleMenuOpen={this.toggleMenuOpen}
-            userId={this.state.userId}/>
+            userId={this.state.userId}
+            recipients={this.state.recipients}/>
           <ModePage 
             menuOpen={this.state.menuOpen}
             mode={this.state.mode}
             changeMode={this.handleChangeMode}
             userId={this.state.userId}
-            setUserId={this.setUserId}/>
+            setUserId={this.setUserId}
+            toggleMenuOpen={this.toggleMenuOpen}/>
       </div>
     );  
   }

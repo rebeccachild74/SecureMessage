@@ -17,6 +17,7 @@ class LoginPage extends React.Component {
     handleSubmit = (event) => {
         event.preventDefault();
         this.props.changeMode(AppMode.FEED);
+        this.props.toggleMenuOpen();
         this.props.setUserId(this.emailInputRef.current.value);
     }
 
