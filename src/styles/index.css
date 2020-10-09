@@ -1,11 +1,20 @@
 /* INDEX.CSS -- The style definitions for the Speedgolf App. These are imported
   in index.css for the entire app. */
 
+:root {
+  --dark-gray: #495057;
+  --mid-gray: #ADB5BD;
+  --light-gray: #CED4DA;
+  --lighter-gray: #F8F9FA;
+  --highlight: #FFFFFF;
+  --shadow: #000000;
+}
+
 /* Styling of the fixed top bar in the app */
 .navbar {
   overflow: hidden; /* Don't allow scrolling */
   display: block; /* Occupies its own horizontal space */
-  background-color: #13294E;
+  background-color: var(--dark-gray);
   position: fixed; /* Doesn't move */
   top: 0;
   width: 100%; /* 100% of width of screen */
@@ -37,7 +46,7 @@ padding-bottom: 5px;
   z-index: 150; /* Force the menu to be at front */
   top: 48px; /* Position menu 48 px from top of screen; accomodates top navbar */
   left: 0; /* Position the menu on the left hand side */
-  background-color: #13294E; /* Background color is dark blue */
+  background-color: var(--dark-gray); /* Background color is dark blue */
   overflow-x: hidden; /* Don't allow horizontal scroll */
   transition: 0.5s; /* Animation transition time is 0.5 sec */
   padding-top: 12px; /* Place menu content 12 px from top */
@@ -67,12 +76,12 @@ padding-bottom: 5px;
 /* Required ordering of link style definitions: visited, hover, active. If out of this order, they won't work!! */
 
 .sidemenu a:visited {
-background-color:  #13294E !important;
+background-color:  var(--dark-gray) !important;
 color: white !important;
 }
 
 .sidemenu a:active {
-background-color:  #13294E !important;
+background-color:  var(--dark-gray) !important;
 color: white !important;
 }
 
@@ -98,7 +107,7 @@ color: white !important;
 /* side menu button styling */
 .sidemenu-btn {
 background-color: transparent;
-border-color: #13294E;
+border-color: var(--dark-gray);
 text-align: center;
 }
 
@@ -113,7 +122,7 @@ text-align: center;
 .sidemenu-item:hover {
   cursor: default;
   text-decoration: none;
-  color: #13294E !important;
+  color: var(--dark-gray) !important;
   background-color: #F0F0F0;
 }
 
@@ -122,7 +131,7 @@ text-align: center;
        pointer-events: none;
        cursor: default;
        text-decoration: none;
-       color: #13294E !important;
+       color: var(--dark-gray) !important;
        background-color: #F0F0F0;
 }
 
@@ -139,14 +148,14 @@ text-align: center;
 
 /* The SpeedScore dark blue color theme  */       
 .btn-color-theme {
-      background-color: #13294E;
+      background-color: var(--dark-gray);
       color: white;
   }
   
 /* The color theme when a bottom bar menu item is selected */
 .btn-alt-color-theme {
       background-color: #F0F0F0;
-      color: #13294E;
+      color: var(--dark-gray);
   }
 
 /* change items to gray when disabled class is applied  */
@@ -157,8 +166,8 @@ color: gray;
 
 .btn-color-theme-outline {
       border: 2px;
-      border-color: #13294E;
-      color: #13294E;
+      border-color: var(--dark-gray);
+      color: var(--dark-gray);
 }
 
 /* Styling for the divs in the app. Ensures that the content at top isn't obscured by top bar */
@@ -179,7 +188,7 @@ cursor: pointer;
 
 /* Styling for mode bar at the bottom of the page */
 .modebar {
-background-color: #13294E;
+background-color: var(--dark-gray);
 overflow: hidden;
 position: fixed;
 bottom: 0;
@@ -202,7 +211,7 @@ font-size: 17px;
 /* Add a gray background color to the button when it is selected */
 .modebar a:active {
 background-color: #F0F0F0;
-color: #13294E;
+color: var(--dark-gray);
 }
 
 /* Add a gray background color to button when it is hovered */
@@ -235,7 +244,7 @@ width:60px;
 height:60px;
 bottom:60px;
 right:40px;
-background-color:#13294E;
+background-color:var(--dark-gray);
 color:white;
 border-radius:50px;
 text-align:center;
@@ -256,6 +265,7 @@ color: white !important;
 
 body {
 margin: 0;
+font-family: Roboto;
 }
 
 /* This class disables a button */
@@ -275,14 +285,42 @@ color: white !important;
 /* Login page styling */
 .login-text {
 text-align: center;
-width: 90%;
-height: 10%;
-font-size: 24px;
+width: 400px;
+height: 32px;
 }
 
 .login-btn {
-width: 70%;
-font-size: 36px;
+width: 16%;
+font-size: 18px;
+border-radius: 10px;
+}
+
+.login-div {
+  margin-top: 10%;
+}
+
+.login-div h1 {
+  font-size: 48px;
+  padding-bottom: 18px;
+}
+
+.login-div .field-input {
+  font-size: 18px;
+}
+
+.login-footer {
+  position: absolute;
+  bottom: 10px;
+  width: 50%;
+  font-size: 14px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+}
+
+.btn-primary:hover {
+  background-color: var(--mid-gray);
+  border-color: var(--mid-gray);
 }
 
 /* Form styling */
@@ -306,7 +344,7 @@ text-align: center;
   pointer-events: none;
   cursor: default;
   text-decoration: none;
-  color: #13294E !important;
+  color: var(--dark-gray) !important;
   background-color: #F0F0F0;
 }
 
@@ -315,3 +353,21 @@ text-align: center;
   pointer-events: none;
 }
 
+.form-control {
+  background-color: rgba(206, 212, 218, 0.0);
+  border-color: var(--dark-gray);
+  border-width: 4px;
+  border-radius: 10;
+}
+
+.form-control:focus {
+  background-color: rgba(206, 212, 218, 0.0);
+  border-color: var(--dark-gray);
+  border-width: 4px;
+  border-radius: 10;
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px var(--mid-gray);
+}
+
+form input.login-text[type="text"] {
+  font-size: 18px;
+}

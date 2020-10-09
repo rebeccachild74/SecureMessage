@@ -24,7 +24,7 @@ class NavBar extends React.Component {
     
   render() {
     return (
-    <div className="navbar">  
+    <div className={"navbar" + (this.props.mode === AppMode.LOGIN ? " invisible" : " visible")}>  
     <span className="navbar-items">
       <button className="sidemenu-btn" onClick={this.handleMenuBtnClick}>
         <span id="menuBtnIcon" className={"sidemenu-btn-icon " + this.getMenuBtnIcon()}>
