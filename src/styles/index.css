@@ -157,7 +157,7 @@ color: white !important;
 }
 
 .new-msg-btn {
-  margin-top: 550px !important;
+  margin-top:300px !important;
   background-color: var(--lighter-gray) !important;
 }
 
@@ -197,12 +197,13 @@ color: gray;
 
 /* Styling for the divs in the app. Ensures that the content at top isn't obscured by top bar */
 .padded-page {
-padding: 112px 8px 8px 190px;
+padding: 112px 8px 24px 190px;
 }
 
 .message-modal {
   background-color: var(--mid-gray);
-  width: 70%;
+  margin: 0px 0px 0px 200px;
+  width: 50%;
   height: 400px;
   border-radius: 12px;
   z-index: 190;
