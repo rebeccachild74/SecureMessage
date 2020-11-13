@@ -25,6 +25,9 @@ const app = express();
 //////////////////////////////////////////////////////////////////////////
 import mongoose from 'mongoose';
 import { profileEnd } from 'console';
+import { Crypt, RSA } from 'hybrid-crypto-js';
+const fetch = require("node-fetch");
+var forge = require('node-forge');
 const connectStr = 'mongodb://localhost:27017/appdb';
 mongoose.connect(connectStr, {useNewUrlParser: true, useUnifiedTopology: true})
   .then(
@@ -56,6 +59,11 @@ roundSchema.virtual('SGS').get(function() {
   return (this.strokes * 60) + (this.minutes * 60) + this.seconds;
 });
 
+const messageSchema = new Schema({
+  senderId: String,
+  content: String,
+});
+
 //Define schema that maps to a document in the Users collection in the appdb
 //database.
 const userSchema = new Schema({
@@ -67,9 +75,20 @@ const userSchema = new Schema({
   securityQuestion: String,
   securityAnswer: {type: String, required: function() 
     {return this.securityQuestion ? true: false}},
+  privateKey: String,
+  publicKeys: [],
+  messages: [],
   rounds: [roundSchema]
 });
 const User = mongoose.model("User",userSchema); 
+
+//////////////////////////////////////////////////////////////////////////
+//ENCRYPTION SET-UP
+//////////////////////////////////////////////////////////////////////////
+var crypt = new Crypt({ md: "sha512" });
+var pki = forge.pki;
+var rsa = forge.pki.rsa;
+
 
 //////////////////////////////////////////////////////////////////////////
 //PASSPORT SET-UP
@@ -238,6 +257,24 @@ app.post('/auth/login',
 //USER ACCOUNT MANAGEMENT ROUTES
 ////////////////////////////////
 
+//READ user route: Retrieves all users from users collection (GET)
+app.get('/users', async(req, res, next) => {
+  console.log("in /users route (GET) all users");
+  try {
+    let allUsers = await User.find({});
+    console.log("Getting all users");
+    console.log(allUsers);
+    if (!allUsers) {
+      return res.status(404).send("No users found");
+    } else {
+      return res.status(200).json(JSON.stringify(allUsers));
+    }
+  } catch (err) {
+    console.log()
+    return res.status(400).send("Unexpected error occurred when looking up all users: " + err);
+  }
+});
+
 
 //READ user route: Retrieves the user with the specified userId from users collection (GET)
 app.get('/users/:userId', async(req, res, next) => {
@@ -278,6 +315,52 @@ app.post('/users/:userId',  async (req, res, next) => {
       res.status(400).send("There is already an account with email '" + 
         req.params.userId + "'.");
     } else { //account available -- add to database
+
+      // let keyPair = require('keypair');
+      
+      var keys = pki.rsa.generateKeyPair(2048);
+      var privateKeyPem = pki.privateKeyToPem(keys.privateKey);
+      var pubKeyPem = pki.publicKeyToPem(keys.publicKey);
+
+      // update all other users with public keys
+      const result = await fetch('http://localhost:8081/users', {method: 'GET'});
+      let users = await result.json();
+      users = JSON.parse(users);
+
+      users.forEach(async function(user) {
+        // update all the user's public key arrays
+        let userKeys = user.publicKeys;
+        let newObj = { userId: req.params.userId, publicKey:pubKeyPem };
+        userKeys.push(newObj);
+        
+        const accountInfo = {
+          displayName: user.displayName,
+          password: user.accountPassword,
+          profilePicURL: user.profilePicURL,
+          securityQuestion: user.accountSecurityQuestion,
+          securityAnswer: user.accountSecurityAnswer,
+          publicKeys: userKeys,
+      };
+
+      console.log(accountInfo);
+
+        // send a request to update the db
+        const res1 = await fetch("http://localhost:8081/users/" + req.params.userId, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+              },
+          method: 'POST',
+          body: JSON.stringify(accountInfo)});
+          if (res1.status == 200) { //successful account creation!
+            console.log("Public Keys updated");
+        } else { //Unsuccessful account creation
+            //Grab textual error message
+            const resText = await res1.text();
+            console.log(resText);
+        }
+      });
+
       thisUser = await new User({
         id: req.params.userId,
         password: req.body.password,
@@ -286,6 +369,9 @@ app.post('/users/:userId',  async (req, res, next) => {
         profilePicURL: req.body.profilePicURL,
         securityQuestion: req.body.securityQuestion,
         securityAnswer: req.body.securityAnswer,
+        privateKey: privateKeyPem,
+        publicKeys: [], // public keys of other users
+        messages: [],
         rounds: []
       }).save();
       return res.status(201).send("New account for '" + 
@@ -305,7 +391,7 @@ app.put('/users/:userId',  async (req, res, next) => {
         "It must contain 'userId' as parameter.");
   }
   const validProps = ['password', 'displayName', 'profilePicURL', 
-    'securityQuestion', 'securityAnswer'];
+    'securityQuestion', 'securityAnswer', 'publicKeys', 'messages'];
   for (const bodyProp in req.body) {
     if (!validProps.includes(bodyProp)) {
       return res.status(400).send("users/ PUT request formulated incorrectly." +
