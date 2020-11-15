@@ -92,19 +92,21 @@ closeResetModal = () => {
 
   render() {
     return(
-        <div id="login-mode-div" className="padded-page">
+        <div id="login-mode-div" className="padded-page login-div">
         <center>
+            <h1>SecureMessage Login</h1>
+            <p />
             <h1 />
             {this.state.accountCreateMsg != "" ? <p className="emphasis">{this.state.accountCreateMsg}</p> : null}
             {this.state.loginMsg != "" ? <p className="emphasis">{this.state.loginMsg}</p> : null}
             <form id="loginInterface" onSubmit={this.handleLoginSubmit}>
-            <label htmlFor="emailInput" style={{ padding: 0, fontSize: 24 }}>
-                Email:
+            <label htmlFor="emailInput" className="field-input" style={{ padding: 0, fontSize: 24 }}>
+                Username:
                 <input
                 ref={this.emailInputRef}
                 className="form-control login-text"
                 type="email"
-                placeholder="Enter Email Address"
+                placeholder="Enter Username"
                 id="emailInput"
                 pattern="[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
                 required={true}
@@ -123,6 +125,7 @@ closeResetModal = () => {
                 />
             </label>
             <p className="bg-danger" id="feedback" style={{ fontSize: 16 }} />
+            <br />
             <button
                 type="submit"
                 className="btn-color-theme btn btn-primary btn-block login-btn">
@@ -132,18 +135,10 @@ closeResetModal = () => {
             <p>
             <button type="button" className="btn btn-link login-link" 
                     onClick={() => {this.setState({showCreateAccountDialog: true});}}>
-                Create an account</button> | 
-                <button type="button" className="btn btn-link login-link"
-                        onClick={() => {this.setState({showResetPasswordDialog: true});}}>
-                Reset your password</button>
-            </p>  
-            <button type="button" className="btn btn-github"
-               onClick={() => this.handleOAuthLoginClick("github")}>
-              <span className={this.state.githubIcon}></span>&nbsp;
-                {this.state.githubLabel}
-            </button>
-            <p>
-                <i>Version CptS 489</i>
+                Create an account</button>
+            </p>
+            <p className="login-footer">
+                <i>© 2020 SecureMessage. All rights reserved.</i>
             </p>
             </form>
             {this.state.showCreateAccountDialog ? 
