@@ -21,8 +21,12 @@ class MessageModal extends React.Component {
     //handleNewMsgChange--Called when a field in a dialog box form changes.
     handleSendMsg = async (event) => {
         event.preventDefault();
-
-        this.props.
+        this.props.sendMessage(this.state.recipient, this.state.messageText);
+        this.props.toggleModal();
+        this.setState({
+            recipient: "",
+            messageText: "",
+        })
     }
 
 

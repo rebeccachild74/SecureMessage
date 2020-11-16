@@ -13,7 +13,7 @@ class SideMenu extends React.Component {
 //determine mode.
 renderRecipients = () => {
   let recips = [];
-  console.log(this.props.userId);
+
   for (const r in this.props.recipients) {
     let currId = this.props.recipients[r].id
     if (currId !== this.props.userId){

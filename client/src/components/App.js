@@ -11,6 +11,7 @@ import CoursesPage from './CoursesPage.js';
 import AboutBox from './AboutBox.js';
 import AccountBox from './AccountBox.js';
 import MessageModal from './MessageModal.js'
+import { async } from 'regenerator-runtime';
 
 const modeTitle = {};
 modeTitle[AppMode.LOGIN] = "Welcome to SpeedScore";
@@ -40,6 +41,8 @@ class App extends React.Component {
                   userObj: {displayName: "", profilePicURL: ""},
                   userInbox: "",
                   recipients: ["Jermey", "Thomas", "Charlene", "Betsy"],
+                  allMessages: [],
+                  currentThread:[],
                  };
   }
 
@@ -55,6 +58,7 @@ class App extends React.Component {
               userObj: obj.user,
               modalOpen: false,
               authenticated: true,
+              allMessages: obj.user.messages,
               mode: AppMode.FEED //We're authenticated so can get into the app.
             });
           }
@@ -83,8 +87,70 @@ class App extends React.Component {
   sendMsg = async(recipient, text) => {
     // Get the recipient public key - coming soon!
 
-    // First fetch the recipient & senders messages
-    
+    // Add a message to both users messages
+    console.log(recipient);
+    console.log(this.state.userObj.id);
+    console.log(text);
+
+    let url = '/messages/sender/' + this.state.userObj.id + '/' + recipient;
+        let messageInfo = {
+            recipientId: recipient,
+            senderId: this.state.userObj.id,
+            text: text,
+        };
+        let res = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify(messageInfo)}); 
+        if (res.status == 200) { //successful
+            console.log("Message sent!");
+        } else { //Unsuccessful
+            //Grab textual error message
+            const resText = await res.text();
+            console.log(resText);
+        }
+
+    url = '/messages/recipient/' + this.state.userObj.id + '/' + recipient;
+        messageInfo = {
+            recipientId: recipient,
+            senderId: this.state.userObj.id,
+            text: text,
+        };
+        res = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify(messageInfo)}); 
+        if (res.status == 200) { //successful
+            console.log("Message sent!");
+        } else { //Unsuccessful
+            //Grab textual error message
+            const resText = await res.text();
+            console.log(resText);
+        }
+
+    // refetch users messages the message thread
+    if (this.state.userInbox !== ""){
+
+      let url = "/messages/" + this.state.userObj.id;
+      let res = await fetch(url, {method: 'GET'});
+      if (res.status != 200) {
+          let msg = await res.text();
+          alert("There was an error obtaining messages data for this user: " + msg);
+          return;
+      } 
+      let body = await res.json();
+      body = JSON.parse(body);
+      this.setState({allMessages: body});
+      console.log(body);
+      this.toggleUserInbox(this.state.userInbox);
+    }
+
   }
 
   //refreshOnUpdate(newMode) -- Called by child components when user data changes in 
@@ -137,8 +203,21 @@ class App extends React.Component {
     this.setState(prevState => ({accountOpen: !prevState.accountOpen}));
   }
 
-  toggleUserInbox = (userId) => {
-    this.setState({userInbox: userId});
+  toggleUserInbox = async (userId) => {
+
+    // fetch the thread of messages to send as a prop
+    //console.log(this.state.userObj.messages);
+
+    // filter for messages between current user and recipient(userInbox)
+    let inbox = this.state.allMessages.filter((e) => {
+      if (e.senderId === userId || e.recipientId === userId){
+        return e;
+      }
+    })
+
+    this.setState({userInbox: userId, currentThread: inbox});
+
+    //console.log(inbox);
     //console.log("Toggled inbox to user: " + userId);
   }
 
@@ -169,15 +248,17 @@ class App extends React.Component {
             logOut={() => this.handleChangeMode(AppMode.LOGIN)}/>
           <ModePage 
             recipient={this.state.userInbox}
+            thread={this.state.currentThread}
             menuOpen={this.state.menuOpen}
             mode={this.state.mode}
             changeMode={this.handleChangeMode}
             userObj={this.state.userObj}
+            userId={this.state.userObj.id}
             refreshOnUpdate={this.refreshOnUpdate}/>
           <MessageModal
             toggleModal={this.togglemodalOpen}
             modalOpen={this.state.modalOpen}
-            sendMessage={this.sendMessage}/>
+            sendMessage={this.sendMsg}/>
       </div>
     );  
   }

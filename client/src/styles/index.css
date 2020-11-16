@@ -335,6 +335,13 @@ text-align: center;
     padding-top:18px;
     text-align: center;
   }
+
+  .user-info.recipient {
+    width: 80%;
+    margin-right: 65px;
+    background-color: var(--dark-gray);
+    color: white;
+  }
   
   .icon {
     height: 30px;
@@ -672,5 +679,32 @@ text-align: center;
 
   .close-modal h2{
     float: left;
+  }
+
+  .thread-content {
+    padding: 70px 10px 10px 10px;
+    margin-bottom: 20px;
+    height: 100%;
+    display: block;
+    overflow-y:auto
+  }
+
+  .msg {
+    background-color: white;
+    padding: 10px 10px 10px 10px;
+    border-radius: 12px;
+    margin: 10px 0px 10px 0px;
+    max-width: 45%;
+    overflow-wrap: normal;
+  }
+
+  .recieved {
+    clear: left;
+    float: left;
+  }
+
+  .sent {
+    clear: left;
+    float: right;
   }
   
