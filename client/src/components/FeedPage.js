@@ -72,7 +72,7 @@ class FeedPage extends React.Component {
                 <center>
                     <div className="recipient-info">
                         <span className="user-info recipient">
-                            {this.props.recipient === "" ? "Select a user to view messages" :  recipText}
+                            {this.props.recipient === "" ? "Select a user to view your messages with them." :  recipText}
                         </span>
                     </div>
                 </center>

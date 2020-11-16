@@ -61,7 +61,9 @@ roundSchema.virtual('SGS').get(function() {
 
 const messageSchema = new Schema({
   senderId: String,
-  content: String,
+  recieverId: String,
+  text: String,
+  privateKey: String,
 });
 
 //Define schema that maps to a document in the Users collection in the appdb
@@ -77,8 +79,7 @@ const userSchema = new Schema({
     {return this.securityQuestion ? true: false}},
   privateKey: String,
   publicKeys: [],
-  messages: [],
-  rounds: [roundSchema]
+  messages: []
 });
 const User = mongoose.model("User",userSchema); 
 
@@ -262,8 +263,7 @@ app.get('/users', async(req, res, next) => {
   console.log("in /users route (GET) all users");
   try {
     let allUsers = await User.find({});
-    console.log("Getting all users");
-    console.log(allUsers);
+
     if (!allUsers) {
       return res.status(404).send("No users found");
     } else {
@@ -316,50 +316,36 @@ app.post('/users/:userId',  async (req, res, next) => {
         req.params.userId + "'.");
     } else { //account available -- add to database
 
-      // let keyPair = require('keypair');
-      
       var keys = pki.rsa.generateKeyPair(2048);
       var privateKeyPem = pki.privateKeyToPem(keys.privateKey);
       var pubKeyPem = pki.publicKeyToPem(keys.publicKey);
 
       // update all other users with public keys
-      const result = await fetch('http://localhost:8081/users', {method: 'GET'});
+      let result = await fetch('http://localhost:8081/users', {method: 'GET'});
       let users = await result.json();
       users = JSON.parse(users);
 
+      //let userKeys = user.publicKeys;
+      let newObj = { userId: req.params.userId, publicKey:pubKeyPem };
+
       users.forEach(async function(user) {
         // update all the user's public key arrays
-        let userKeys = user.publicKeys;
-        let newObj = { userId: req.params.userId, publicKey:pubKeyPem };
-        userKeys.push(newObj);
-        
-        const accountInfo = {
-          displayName: user.displayName,
-          password: user.accountPassword,
-          profilePicURL: user.profilePicURL,
-          securityQuestion: user.accountSecurityQuestion,
-          securityAnswer: user.accountSecurityAnswer,
-          publicKeys: userKeys,
-      };
-
-      console.log(accountInfo);
-
-        // send a request to update the db
-        const res1 = await fetch("http://localhost:8081/users/" + req.params.userId, {
-          headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-              },
-          method: 'POST',
-          body: JSON.stringify(accountInfo)});
-          if (res1.status == 200) { //successful account creation!
-            console.log("Public Keys updated");
-        } else { //Unsuccessful account creation
-            //Grab textual error message
-            const resText = await res1.text();
-            console.log(resText);
-        }
+        updatePublicKeys(newObj, user.id);
       });
+
+      let newPublicKeys = [];
+
+      // update the new user with its own public key or all the rest of the public keys if there are other users already
+      if (users.length > 0){
+        // fetch users again to make sure the new user has all the public keys
+        result = await fetch('http://localhost:8081/users', {method: 'GET'});
+        users = await result.json();
+        users = JSON.parse(users);
+        newPublicKeys = users[0].publicKeys;
+      } else {
+        newPublicKeys[0] = newObj;
+      }
+      
 
       thisUser = await new User({
         id: req.params.userId,
@@ -370,7 +356,7 @@ app.post('/users/:userId',  async (req, res, next) => {
         securityQuestion: req.body.securityQuestion,
         securityAnswer: req.body.securityAnswer,
         privateKey: privateKeyPem,
-        publicKeys: [], // public keys of other users
+        publicKeys: newPublicKeys, // public keys of other users
         messages: [],
         rounds: []
       }).save();
@@ -381,6 +367,22 @@ app.post('/users/:userId',  async (req, res, next) => {
     return res.status(400).send("Unexpected error occurred when adding or looking up user in database. " + err);
   }
 });
+
+async function updatePublicKeys(newKeyObj, userId) {
+  console.log("Updating " + userId + "'s public keys");
+  try {
+    let status = await User.updateOne(
+    {id: userId},
+    {$push: {publicKeys: newKeyObj}});
+    if (status.nModified != 1) { //Should never happen!
+      console.log("Unexpected error occurred when adding public Key to database. Public key was not added.");
+    } else {
+      console.log("Successfully added pk to " + userId);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
 
 //UPDATE user route: Updates a new user account in the users collection (POST)
 app.put('/users/:userId',  async (req, res, next) => {
@@ -433,8 +435,75 @@ app.delete('/users/:userId', async(req, res, next) => {
 });
 
 /////////////////////////////////
-//ROUNDS ROUTES
+//ROUNDS ROUTES - change to messages
 ////////////////////////////////
+
+//CREATE messages route: Adds a new message as a subdocument to 
+//a document in the users collection (POST)
+app.post('/messages/sender/:senderId/:recipientId', async (req, res, next) => {
+  console.log("in /messages sender (POST) route with params = " + 
+              JSON.stringify(req.params) + " and body = " + 
+              JSON.stringify(req.body));
+  if (!req.body.hasOwnProperty("recipientId") || 
+      !req.body.hasOwnProperty("senderId") || 
+      !req.body.hasOwnProperty("privateKey") ||
+      !req.body.hasOwnProperty("text")) {
+    //Body does not contain correct properties
+    return res.status(400).send("POST request on /messages formulated incorrectly." +
+      "Body must contain all 4 required fields: reciepientId, senderId, text, private key");
+  }
+  // Add to sender messages
+  try {
+    let status = await User.updateOne(
+    {id: req.params.senderId},
+    {$push: {messages: req.body}});
+    if (status.nModified != 1) { //Should never happen!
+      res.status(400).send("Unexpected error occurred when adding message to"+
+        " sender in database. Message was not added.");
+    } else {
+      res.status(200).send("Message successfully added to sender database.");
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Unexpected error occurred when adding round" +
+     " to sender database: " + err);
+  }
+});
+
+// NEED TO ENCRYPT MESSAGES HERE
+//CREATE messages route: Adds a new message as a subdocument to 
+//a document in the users collection (POST)
+app.post('/messages/recipient/:senderId/:recipientId', async (req, res, next) => {
+  console.log("in /messages recip (POST) route with params = " + 
+              JSON.stringify(req.params) + " and body = " + 
+              JSON.stringify(req.body));
+  if (!req.body.hasOwnProperty("recipientId") || 
+      !req.body.hasOwnProperty("senderId") ||
+      !req.body.hasOwnProperty("privateKey") ||
+      !req.body.hasOwnProperty("text")) {
+    //Body does not contain correct properties
+    return res.status(400).send("POST request on /messages formulated incorrectly." +
+      "Body must contain all 4 required fields: reciepientId, senderId, text, private key");
+  }
+  
+  // add to receiver messages
+ // Add to sender messages
+  try {
+    let status = await User.updateOne(
+    {id: req.params.recipientId},
+    {$push: {messages: req.body}});
+    if (status.nModified != 1) { //Should never happen!
+      res.status(400).send("Unexpected error occurred when adding message to"+
+        " recip in database. Message was not added.");
+    } else {
+      res.status(200).send("Message successfully added to recip database.");
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Unexpected error occurred when adding round" +
+     " to recip database: " + err);
+  }
+});
 
 //CREATE round route: Adds a new round as a subdocument to 
 //a document in the users collection (POST)
@@ -482,6 +551,25 @@ app.get('/rounds/:userId', async(req, res) => {
       return res.status(400).message("No user account with specified userId was found in database.");
     } else {
       return res.status(200).json(JSON.stringify(thisUser.rounds));
+    }
+  } catch (err) {
+    console.log()
+    return res.status(400).message("Unexpected error occurred when looking up user in database: " + err);
+  }
+});
+
+// NEED TO DECRYPT MESSAGES HERE
+//READ round route: Returns all messages associated 
+//with a given user in the users collection (GET)
+app.get('/messages/:userId', async(req, res) => {
+  console.log("in /messages route (GET) with userId = " + 
+    JSON.stringify(req.params.userId));
+  try {
+    let thisUser = await User.findOne({id: req.params.userId});
+    if (!thisUser) {
+      return res.status(400).message("No user account with specified userId was found in database.");
+    } else {
+      return res.status(200).json(JSON.stringify(thisUser.messages));
     }
   } catch (err) {
     console.log()
@@ -547,4 +635,6 @@ app.delete('/rounds/:userId/:roundId', async (req, res, next) => {
     return res.status(400).send("Unexpected error occurred when deleting round from database: " + err);
   } 
 });
+
+
 

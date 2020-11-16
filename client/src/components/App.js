@@ -88,15 +88,13 @@ class App extends React.Component {
     // Get the recipient public key - coming soon!
 
     // Add a message to both users messages
-    console.log(recipient);
-    console.log(this.state.userObj.id);
-    console.log(text);
 
     let url = '/messages/sender/' + this.state.userObj.id + '/' + recipient;
         let messageInfo = {
             recipientId: recipient,
             senderId: this.state.userObj.id,
             text: text,
+            privateKey: this.state.userObj.privateKey,
         };
         let res = await fetch(url, {
             headers: {
@@ -118,6 +116,7 @@ class App extends React.Component {
             recipientId: recipient,
             senderId: this.state.userObj.id,
             text: text,
+            privateKey: this.state.userObj.privateKey,
         };
         res = await fetch(url, {
             headers: {
@@ -137,8 +136,8 @@ class App extends React.Component {
     // refetch users messages the message thread
     if (this.state.userInbox !== ""){
 
-      let url = "/messages/" + this.state.userObj.id;
-      let res = await fetch(url, {method: 'GET'});
+      url = "/messages/" + this.state.userObj.id;
+      res = await fetch(url, {method: 'GET'});
       if (res.status != 200) {
           let msg = await res.text();
           alert("There was an error obtaining messages data for this user: " + msg);

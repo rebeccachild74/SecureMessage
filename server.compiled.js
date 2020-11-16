@@ -114,7 +114,9 @@ roundSchema.virtual('SGS').get(function () {
 });
 var messageSchema = new Schema({
   senderId: String,
-  content: String
+  recieverId: String,
+  text: String,
+  privateKey: String
 }); //Define schema that maps to a document in the Users collection in the appdb
 //database.
 
@@ -137,8 +139,7 @@ var userSchema = new Schema({
   },
   privateKey: String,
   publicKeys: [],
-  messages: [],
-  rounds: [roundSchema]
+  messages: []
 });
 
 var User = _mongoose["default"].model("User", userSchema); //////////////////////////////////////////////////////////////////////////
@@ -435,35 +436,33 @@ app.get('/users', /*#__PURE__*/function () {
 
           case 4:
             allUsers = _context4.sent;
-            console.log("Getting all users");
-            console.log(allUsers);
 
             if (allUsers) {
-              _context4.next = 11;
+              _context4.next = 9;
               break;
             }
 
             return _context4.abrupt("return", res.status(404).send("No users found"));
 
-          case 11:
+          case 9:
             return _context4.abrupt("return", res.status(200).json(JSON.stringify(allUsers)));
 
-          case 12:
-            _context4.next = 18;
+          case 10:
+            _context4.next = 16;
             break;
 
-          case 14:
-            _context4.prev = 14;
+          case 12:
+            _context4.prev = 12;
             _context4.t0 = _context4["catch"](1);
             console.log();
             return _context4.abrupt("return", res.status(400).send("Unexpected error occurred when looking up all users: " + _context4.t0));
 
-          case 18:
+          case 16:
           case "end":
             return _context4.stop();
         }
       }
-    }, _callee4, null, [[1, 14]]);
+    }, _callee4, null, [[1, 12]]);
   }));
 
   return function (_x11, _x12, _x13) {
@@ -523,7 +522,7 @@ app.get('/users/:userId', /*#__PURE__*/function () {
 
 app.post('/users/:userId', /*#__PURE__*/function () {
   var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee7(req, res, next) {
-    var thisUser, keys, privateKeyPem, pubKeyPem, result, users;
+    var thisUser, keys, privateKeyPem, pubKeyPem, result, users, newObj, newPublicKeys;
     return _regeneratorRuntime["default"].wrap(function _callee7$(_context7) {
       while (1) {
         switch (_context7.prev = _context7.next) {
@@ -554,12 +553,11 @@ app.post('/users/:userId', /*#__PURE__*/function () {
 
             //account already exists
             res.status(400).send("There is already an account with email '" + req.params.userId + "'.");
-            _context7.next = 26;
+            _context7.next = 40;
             break;
 
           case 11:
             //account available -- add to database
-            // let keyPair = require('keypair');
             keys = pki.rsa.generateKeyPair(2048);
             privateKeyPem = pki.privateKeyToPem(keys.privateKey);
             pubKeyPem = pki.publicKeyToPem(keys.publicKey); // update all other users with public keys
@@ -576,63 +574,22 @@ app.post('/users/:userId', /*#__PURE__*/function () {
 
           case 19:
             users = _context7.sent;
-            users = JSON.parse(users);
+            users = JSON.parse(users); //let userKeys = user.publicKeys;
+
+            newObj = {
+              userId: req.params.userId,
+              publicKey: pubKeyPem
+            };
             users.forEach( /*#__PURE__*/function () {
               var _ref7 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee6(user) {
-                var userKeys, newObj, accountInfo, res1, resText;
                 return _regeneratorRuntime["default"].wrap(function _callee6$(_context6) {
                   while (1) {
                     switch (_context6.prev = _context6.next) {
                       case 0:
                         // update all the user's public key arrays
-                        userKeys = user.publicKeys;
-                        newObj = {
-                          userId: req.params.userId,
-                          publicKey: pubKeyPem
-                        };
-                        userKeys.push(newObj);
-                        accountInfo = {
-                          displayName: user.displayName,
-                          password: user.accountPassword,
-                          profilePicURL: user.profilePicURL,
-                          securityQuestion: user.accountSecurityQuestion,
-                          securityAnswer: user.accountSecurityAnswer,
-                          publicKeys: userKeys
-                        };
-                        console.log(accountInfo); // send a request to update the db
+                        updatePublicKeys(newObj, user.id);
 
-                        _context6.next = 7;
-                        return fetch("http://localhost:8081/users/" + req.params.userId, {
-                          headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                          },
-                          method: 'POST',
-                          body: JSON.stringify(accountInfo)
-                        });
-
-                      case 7:
-                        res1 = _context6.sent;
-
-                        if (!(res1.status == 200)) {
-                          _context6.next = 12;
-                          break;
-                        }
-
-                        //successful account creation!
-                        console.log("Public Keys updated");
-                        _context6.next = 16;
-                        break;
-
-                      case 12:
-                        _context6.next = 14;
-                        return res1.text();
-
-                      case 14:
-                        resText = _context6.sent;
-                        console.log(resText);
-
-                      case 16:
+                      case 1:
                       case "end":
                         return _context6.stop();
                     }
@@ -644,7 +601,35 @@ app.post('/users/:userId', /*#__PURE__*/function () {
                 return _ref7.apply(this, arguments);
               };
             }());
-            _context7.next = 24;
+            newPublicKeys = []; // update the new user with its own public key or all the rest of the public keys if there are other users already
+
+            if (!(users.length > 0)) {
+              _context7.next = 35;
+              break;
+            }
+
+            _context7.next = 27;
+            return fetch('http://localhost:8081/users', {
+              method: 'GET'
+            });
+
+          case 27:
+            result = _context7.sent;
+            _context7.next = 30;
+            return result.json();
+
+          case 30:
+            users = _context7.sent;
+            users = JSON.parse(users);
+            newPublicKeys = users[0].publicKeys;
+            _context7.next = 36;
+            break;
+
+          case 35:
+            newPublicKeys[0] = newObj;
+
+          case 36:
+            _context7.next = 38;
             return new User({
               id: req.params.userId,
               password: req.body.password,
@@ -654,37 +639,88 @@ app.post('/users/:userId', /*#__PURE__*/function () {
               securityQuestion: req.body.securityQuestion,
               securityAnswer: req.body.securityAnswer,
               privateKey: privateKeyPem,
-              publicKeys: [],
+              publicKeys: newPublicKeys,
               // public keys of other users
               messages: [],
               rounds: []
             }).save();
 
-          case 24:
+          case 38:
             thisUser = _context7.sent;
             return _context7.abrupt("return", res.status(201).send("New account for '" + req.params.userId + "' successfully created."));
 
-          case 26:
-            _context7.next = 31;
+          case 40:
+            _context7.next = 45;
             break;
 
-          case 28:
-            _context7.prev = 28;
+          case 42:
+            _context7.prev = 42;
             _context7.t0 = _context7["catch"](3);
             return _context7.abrupt("return", res.status(400).send("Unexpected error occurred when adding or looking up user in database. " + _context7.t0));
 
-          case 31:
+          case 45:
           case "end":
             return _context7.stop();
         }
       }
-    }, _callee7, null, [[3, 28]]);
+    }, _callee7, null, [[3, 42]]);
   }));
 
   return function (_x17, _x18, _x19) {
     return _ref6.apply(this, arguments);
   };
-}()); //UPDATE user route: Updates a new user account in the users collection (POST)
+}());
+
+function updatePublicKeys(_x21, _x22) {
+  return _updatePublicKeys.apply(this, arguments);
+} //UPDATE user route: Updates a new user account in the users collection (POST)
+
+
+function _updatePublicKeys() {
+  _updatePublicKeys = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee17(newKeyObj, userId) {
+    var status;
+    return _regeneratorRuntime["default"].wrap(function _callee17$(_context17) {
+      while (1) {
+        switch (_context17.prev = _context17.next) {
+          case 0:
+            console.log("Updating " + userId + "'s public keys");
+            _context17.prev = 1;
+            _context17.next = 4;
+            return User.updateOne({
+              id: userId
+            }, {
+              $push: {
+                publicKeys: newKeyObj
+              }
+            });
+
+          case 4:
+            status = _context17.sent;
+
+            if (status.nModified != 1) {
+              //Should never happen!
+              console.log("Unexpected error occurred when adding public Key to database. Public key was not added.");
+            } else {
+              console.log("Successfully added pk to " + userId);
+            }
+
+            _context17.next = 11;
+            break;
+
+          case 8:
+            _context17.prev = 8;
+            _context17.t0 = _context17["catch"](1);
+            console.log(_context17.t0);
+
+          case 11:
+          case "end":
+            return _context17.stop();
+        }
+      }
+    }, _callee17, null, [[1, 8]]);
+  }));
+  return _updatePublicKeys.apply(this, arguments);
+}
 
 app.put('/users/:userId', /*#__PURE__*/function () {
   var _ref8 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee8(req, res, next) {
@@ -760,7 +796,7 @@ app.put('/users/:userId', /*#__PURE__*/function () {
     }, _callee8, null, [[11, 18]]);
   }));
 
-  return function (_x21, _x22, _x23) {
+  return function (_x23, _x24, _x25) {
     return _ref8.apply(this, arguments);
   };
 }()); //DELETE user route: Deletes the document with the specified userId from users collection (DELETE)
@@ -810,39 +846,39 @@ app["delete"]('/users/:userId', /*#__PURE__*/function () {
     }, _callee9, null, [[1, 12]]);
   }));
 
-  return function (_x24, _x25, _x26) {
+  return function (_x26, _x27, _x28) {
     return _ref9.apply(this, arguments);
   };
 }()); /////////////////////////////////
-//ROUNDS ROUTES
+//ROUNDS ROUTES - change to messages
 ////////////////////////////////
-//CREATE round route: Adds a new round as a subdocument to 
+//CREATE messages route: Adds a new message as a subdocument to 
 //a document in the users collection (POST)
 
-app.post('/rounds/:userId', /*#__PURE__*/function () {
+app.post('/messages/sender/:senderId/:recipientId', /*#__PURE__*/function () {
   var _ref10 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee10(req, res, next) {
     var status;
     return _regeneratorRuntime["default"].wrap(function _callee10$(_context10) {
       while (1) {
         switch (_context10.prev = _context10.next) {
           case 0:
-            console.log("in /rounds (POST) route with params = " + JSON.stringify(req.params) + " and body = " + JSON.stringify(req.body));
+            console.log("in /messages sender (POST) route with params = " + JSON.stringify(req.params) + " and body = " + JSON.stringify(req.body));
 
-            if (!(!req.body.hasOwnProperty("date") || !req.body.hasOwnProperty("course") || !req.body.hasOwnProperty("type") || !req.body.hasOwnProperty("holes") || !req.body.hasOwnProperty("strokes") || !req.body.hasOwnProperty("minutes") || !req.body.hasOwnProperty("seconds") || !req.body.hasOwnProperty("notes"))) {
+            if (!(!req.body.hasOwnProperty("recipientId") || !req.body.hasOwnProperty("senderId") || !req.body.hasOwnProperty("privateKey") || !req.body.hasOwnProperty("text"))) {
               _context10.next = 3;
               break;
             }
 
-            return _context10.abrupt("return", res.status(400).send("POST request on /rounds formulated incorrectly." + "Body must contain all 8 required fields: date, course, type, holes, strokes, " + "minutes, seconds, notes."));
+            return _context10.abrupt("return", res.status(400).send("POST request on /messages formulated incorrectly." + "Body must contain all 4 required fields: reciepientId, senderId, text, private key"));
 
           case 3:
             _context10.prev = 3;
             _context10.next = 6;
             return User.updateOne({
-              id: req.params.userId
+              id: req.params.senderId
             }, {
               $push: {
-                rounds: req.body
+                messages: req.body
               }
             });
 
@@ -851,9 +887,9 @@ app.post('/rounds/:userId', /*#__PURE__*/function () {
 
             if (status.nModified != 1) {
               //Should never happen!
-              res.status(400).send("Unexpected error occurred when adding round to" + " database. Round was not added.");
+              res.status(400).send("Unexpected error occurred when adding message to" + " sender in database. Message was not added.");
             } else {
-              res.status(200).send("Round successfully added to database.");
+              res.status(200).send("Message successfully added to sender database.");
             }
 
             _context10.next = 14;
@@ -863,7 +899,7 @@ app.post('/rounds/:userId', /*#__PURE__*/function () {
             _context10.prev = 10;
             _context10.t0 = _context10["catch"](3);
             console.log(_context10.t0);
-            return _context10.abrupt("return", res.status(400).send("Unexpected error occurred when adding round" + " to database: " + _context10.t0));
+            return _context10.abrupt("return", res.status(400).send("Unexpected error occurred when adding round" + " to sender database: " + _context10.t0));
 
           case 14:
           case "end":
@@ -873,69 +909,240 @@ app.post('/rounds/:userId', /*#__PURE__*/function () {
     }, _callee10, null, [[3, 10]]);
   }));
 
-  return function (_x27, _x28, _x29) {
+  return function (_x29, _x30, _x31) {
     return _ref10.apply(this, arguments);
+  };
+}()); //CREATE messages route: Adds a new message as a subdocument to 
+//a document in the users collection (POST)
+
+app.post('/messages/recipient/:senderId/:recipientId', /*#__PURE__*/function () {
+  var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee11(req, res, next) {
+    var status;
+    return _regeneratorRuntime["default"].wrap(function _callee11$(_context11) {
+      while (1) {
+        switch (_context11.prev = _context11.next) {
+          case 0:
+            console.log("in /messages recip (POST) route with params = " + JSON.stringify(req.params) + " and body = " + JSON.stringify(req.body));
+
+            if (!(!req.body.hasOwnProperty("recipientId") || !req.body.hasOwnProperty("senderId") || !req.body.hasOwnProperty("privateKey") || !req.body.hasOwnProperty("text"))) {
+              _context11.next = 3;
+              break;
+            }
+
+            return _context11.abrupt("return", res.status(400).send("POST request on /messages formulated incorrectly." + "Body must contain all 4 required fields: reciepientId, senderId, text, private key"));
+
+          case 3:
+            _context11.prev = 3;
+            _context11.next = 6;
+            return User.updateOne({
+              id: req.params.recipientId
+            }, {
+              $push: {
+                messages: req.body
+              }
+            });
+
+          case 6:
+            status = _context11.sent;
+
+            if (status.nModified != 1) {
+              //Should never happen!
+              res.status(400).send("Unexpected error occurred when adding message to" + " recip in database. Message was not added.");
+            } else {
+              res.status(200).send("Message successfully added to recip database.");
+            }
+
+            _context11.next = 14;
+            break;
+
+          case 10:
+            _context11.prev = 10;
+            _context11.t0 = _context11["catch"](3);
+            console.log(_context11.t0);
+            return _context11.abrupt("return", res.status(400).send("Unexpected error occurred when adding round" + " to recip database: " + _context11.t0));
+
+          case 14:
+          case "end":
+            return _context11.stop();
+        }
+      }
+    }, _callee11, null, [[3, 10]]);
+  }));
+
+  return function (_x32, _x33, _x34) {
+    return _ref11.apply(this, arguments);
+  };
+}()); //CREATE round route: Adds a new round as a subdocument to 
+//a document in the users collection (POST)
+
+app.post('/rounds/:userId', /*#__PURE__*/function () {
+  var _ref12 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee12(req, res, next) {
+    var status;
+    return _regeneratorRuntime["default"].wrap(function _callee12$(_context12) {
+      while (1) {
+        switch (_context12.prev = _context12.next) {
+          case 0:
+            console.log("in /rounds (POST) route with params = " + JSON.stringify(req.params) + " and body = " + JSON.stringify(req.body));
+
+            if (!(!req.body.hasOwnProperty("date") || !req.body.hasOwnProperty("course") || !req.body.hasOwnProperty("type") || !req.body.hasOwnProperty("holes") || !req.body.hasOwnProperty("strokes") || !req.body.hasOwnProperty("minutes") || !req.body.hasOwnProperty("seconds") || !req.body.hasOwnProperty("notes"))) {
+              _context12.next = 3;
+              break;
+            }
+
+            return _context12.abrupt("return", res.status(400).send("POST request on /rounds formulated incorrectly." + "Body must contain all 8 required fields: date, course, type, holes, strokes, " + "minutes, seconds, notes."));
+
+          case 3:
+            _context12.prev = 3;
+            _context12.next = 6;
+            return User.updateOne({
+              id: req.params.userId
+            }, {
+              $push: {
+                rounds: req.body
+              }
+            });
+
+          case 6:
+            status = _context12.sent;
+
+            if (status.nModified != 1) {
+              //Should never happen!
+              res.status(400).send("Unexpected error occurred when adding round to" + " database. Round was not added.");
+            } else {
+              res.status(200).send("Round successfully added to database.");
+            }
+
+            _context12.next = 14;
+            break;
+
+          case 10:
+            _context12.prev = 10;
+            _context12.t0 = _context12["catch"](3);
+            console.log(_context12.t0);
+            return _context12.abrupt("return", res.status(400).send("Unexpected error occurred when adding round" + " to database: " + _context12.t0));
+
+          case 14:
+          case "end":
+            return _context12.stop();
+        }
+      }
+    }, _callee12, null, [[3, 10]]);
+  }));
+
+  return function (_x35, _x36, _x37) {
+    return _ref12.apply(this, arguments);
   };
 }()); //READ round route: Returns all rounds associated 
 //with a given user in the users collection (GET)
 
 app.get('/rounds/:userId', /*#__PURE__*/function () {
-  var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee11(req, res) {
+  var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee13(req, res) {
     var thisUser;
-    return _regeneratorRuntime["default"].wrap(function _callee11$(_context11) {
+    return _regeneratorRuntime["default"].wrap(function _callee13$(_context13) {
       while (1) {
-        switch (_context11.prev = _context11.next) {
+        switch (_context13.prev = _context13.next) {
           case 0:
             console.log("in /rounds route (GET) with userId = " + JSON.stringify(req.params.userId));
-            _context11.prev = 1;
-            _context11.next = 4;
+            _context13.prev = 1;
+            _context13.next = 4;
             return User.findOne({
               id: req.params.userId
             });
 
           case 4:
-            thisUser = _context11.sent;
+            thisUser = _context13.sent;
 
             if (thisUser) {
-              _context11.next = 9;
+              _context13.next = 9;
               break;
             }
 
-            return _context11.abrupt("return", res.status(400).message("No user account with specified userId was found in database."));
+            return _context13.abrupt("return", res.status(400).message("No user account with specified userId was found in database."));
 
           case 9:
-            return _context11.abrupt("return", res.status(200).json(JSON.stringify(thisUser.rounds)));
+            return _context13.abrupt("return", res.status(200).json(JSON.stringify(thisUser.rounds)));
 
           case 10:
-            _context11.next = 16;
+            _context13.next = 16;
             break;
 
           case 12:
-            _context11.prev = 12;
-            _context11.t0 = _context11["catch"](1);
+            _context13.prev = 12;
+            _context13.t0 = _context13["catch"](1);
             console.log();
-            return _context11.abrupt("return", res.status(400).message("Unexpected error occurred when looking up user in database: " + _context11.t0));
+            return _context13.abrupt("return", res.status(400).message("Unexpected error occurred when looking up user in database: " + _context13.t0));
 
           case 16:
           case "end":
-            return _context11.stop();
+            return _context13.stop();
         }
       }
-    }, _callee11, null, [[1, 12]]);
+    }, _callee13, null, [[1, 12]]);
   }));
 
-  return function (_x30, _x31) {
-    return _ref11.apply(this, arguments);
+  return function (_x38, _x39) {
+    return _ref13.apply(this, arguments);
+  };
+}()); //READ round route: Returns all messages associated 
+//with a given user in the users collection (GET)
+
+app.get('/messages/:userId', /*#__PURE__*/function () {
+  var _ref14 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee14(req, res) {
+    var thisUser;
+    return _regeneratorRuntime["default"].wrap(function _callee14$(_context14) {
+      while (1) {
+        switch (_context14.prev = _context14.next) {
+          case 0:
+            console.log("in /messages route (GET) with userId = " + JSON.stringify(req.params.userId));
+            _context14.prev = 1;
+            _context14.next = 4;
+            return User.findOne({
+              id: req.params.userId
+            });
+
+          case 4:
+            thisUser = _context14.sent;
+
+            if (thisUser) {
+              _context14.next = 9;
+              break;
+            }
+
+            return _context14.abrupt("return", res.status(400).message("No user account with specified userId was found in database."));
+
+          case 9:
+            return _context14.abrupt("return", res.status(200).json(JSON.stringify(thisUser.messages)));
+
+          case 10:
+            _context14.next = 16;
+            break;
+
+          case 12:
+            _context14.prev = 12;
+            _context14.t0 = _context14["catch"](1);
+            console.log();
+            return _context14.abrupt("return", res.status(400).message("Unexpected error occurred when looking up user in database: " + _context14.t0));
+
+          case 16:
+          case "end":
+            return _context14.stop();
+        }
+      }
+    }, _callee14, null, [[1, 12]]);
+  }));
+
+  return function (_x40, _x41) {
+    return _ref14.apply(this, arguments);
   };
 }()); //UPDATE round route: Updates a specific round 
 //for a given user in the users collection (PUT)
 
 app.put('/rounds/:userId/:roundId', /*#__PURE__*/function () {
-  var _ref12 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee12(req, res, next) {
+  var _ref15 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee15(req, res, next) {
     var validProps, bodyObj, bodyProp, status;
-    return _regeneratorRuntime["default"].wrap(function _callee12$(_context12) {
+    return _regeneratorRuntime["default"].wrap(function _callee15$(_context15) {
       while (1) {
-        switch (_context12.prev = _context12.next) {
+        switch (_context15.prev = _context15.next) {
           case 0:
             console.log("in /rounds (PUT) route with params = " + JSON.stringify(req.params) + " and body = " + JSON.stringify(req.body));
             validProps = ['date', 'course', 'type', 'holes', 'strokes', 'minutes', 'seconds', 'notes'];
@@ -944,34 +1151,34 @@ app.put('/rounds/:userId/:roundId', /*#__PURE__*/function () {
 
             delete bodyObj.SGS; //We'll compute this below in seconds.
 
-            _context12.t0 = _regeneratorRuntime["default"].keys(bodyObj);
+            _context15.t0 = _regeneratorRuntime["default"].keys(bodyObj);
 
           case 6:
-            if ((_context12.t1 = _context12.t0()).done) {
-              _context12.next = 16;
+            if ((_context15.t1 = _context15.t0()).done) {
+              _context15.next = 16;
               break;
             }
 
-            bodyProp = _context12.t1.value;
+            bodyProp = _context15.t1.value;
 
             if (validProps.includes(bodyProp)) {
-              _context12.next = 12;
+              _context15.next = 12;
               break;
             }
 
-            return _context12.abrupt("return", res.status(400).send("rounds/ PUT request formulated incorrectly." + "It includes " + bodyProp + ". However, only the following props are allowed: " + "'date', 'course', 'type', 'holes', 'strokes', " + "'minutes', 'seconds', 'notes'"));
+            return _context15.abrupt("return", res.status(400).send("rounds/ PUT request formulated incorrectly." + "It includes " + bodyProp + ". However, only the following props are allowed: " + "'date', 'course', 'type', 'holes', 'strokes', " + "'minutes', 'seconds', 'notes'"));
 
           case 12:
             bodyObj["rounds.$." + bodyProp] = bodyObj[bodyProp];
             delete bodyObj[bodyProp];
 
           case 14:
-            _context12.next = 6;
+            _context15.next = 6;
             break;
 
           case 16:
-            _context12.prev = 16;
-            _context12.next = 19;
+            _context15.prev = 16;
+            _context15.next = 19;
             return User.updateOne({
               "id": req.params.userId,
               "rounds._id": _mongoose["default"].Types.ObjectId(req.params.roundId)
@@ -980,7 +1187,7 @@ app.put('/rounds/:userId/:roundId', /*#__PURE__*/function () {
             });
 
           case 19:
-            status = _context12.sent;
+            status = _context15.sent;
 
             if (status.nModified != 1) {
               res.status(400).send("Unexpected error occurred when updating round in database. Round was not updated.");
@@ -988,39 +1195,39 @@ app.put('/rounds/:userId/:roundId', /*#__PURE__*/function () {
               res.status(200).send("Round successfully updated in database.");
             }
 
-            _context12.next = 27;
+            _context15.next = 27;
             break;
 
           case 23:
-            _context12.prev = 23;
-            _context12.t2 = _context12["catch"](16);
-            console.log(_context12.t2);
-            return _context12.abrupt("return", res.status(400).send("Unexpected error occurred when updating round in database: " + _context12.t2));
+            _context15.prev = 23;
+            _context15.t2 = _context15["catch"](16);
+            console.log(_context15.t2);
+            return _context15.abrupt("return", res.status(400).send("Unexpected error occurred when updating round in database: " + _context15.t2));
 
           case 27:
           case "end":
-            return _context12.stop();
+            return _context15.stop();
         }
       }
-    }, _callee12, null, [[16, 23]]);
+    }, _callee15, null, [[16, 23]]);
   }));
 
-  return function (_x32, _x33, _x34) {
-    return _ref12.apply(this, arguments);
+  return function (_x42, _x43, _x44) {
+    return _ref15.apply(this, arguments);
   };
 }()); //DELETE round route: Deletes a specific round 
 //for a given user in the users collection (DELETE)
 
 app["delete"]('/rounds/:userId/:roundId', /*#__PURE__*/function () {
-  var _ref13 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee13(req, res, next) {
+  var _ref16 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime["default"].mark(function _callee16(req, res, next) {
     var status;
-    return _regeneratorRuntime["default"].wrap(function _callee13$(_context13) {
+    return _regeneratorRuntime["default"].wrap(function _callee16$(_context16) {
       while (1) {
-        switch (_context13.prev = _context13.next) {
+        switch (_context16.prev = _context16.next) {
           case 0:
             console.log("in /rounds (DELETE) route with params = " + JSON.stringify(req.params));
-            _context13.prev = 1;
-            _context13.next = 4;
+            _context16.prev = 1;
+            _context16.next = 4;
             return User.updateOne({
               id: req.params.userId
             }, {
@@ -1032,7 +1239,7 @@ app["delete"]('/rounds/:userId/:roundId', /*#__PURE__*/function () {
             });
 
           case 4:
-            status = _context13.sent;
+            status = _context16.sent;
 
             if (status.nModified != 1) {
               //Should never happen!
@@ -1041,24 +1248,24 @@ app["delete"]('/rounds/:userId/:roundId', /*#__PURE__*/function () {
               res.status(200).send("Round successfully deleted from database.");
             }
 
-            _context13.next = 12;
+            _context16.next = 12;
             break;
 
           case 8:
-            _context13.prev = 8;
-            _context13.t0 = _context13["catch"](1);
-            console.log(_context13.t0);
-            return _context13.abrupt("return", res.status(400).send("Unexpected error occurred when deleting round from database: " + _context13.t0));
+            _context16.prev = 8;
+            _context16.t0 = _context16["catch"](1);
+            console.log(_context16.t0);
+            return _context16.abrupt("return", res.status(400).send("Unexpected error occurred when deleting round from database: " + _context16.t0));
 
           case 12:
           case "end":
-            return _context13.stop();
+            return _context16.stop();
         }
       }
-    }, _callee13, null, [[1, 8]]);
+    }, _callee16, null, [[1, 8]]);
   }));
 
-  return function (_x35, _x36, _x37) {
-    return _ref13.apply(this, arguments);
+  return function (_x45, _x46, _x47) {
+    return _ref16.apply(this, arguments);
   };
 }());

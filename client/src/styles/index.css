@@ -337,7 +337,7 @@ text-align: center;
   }
 
   .user-info.recipient {
-    width: 80%;
+    width: 70%;
     margin-right: 65px;
     background-color: var(--dark-gray);
     color: white;
